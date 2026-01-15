@@ -1,0 +1,684 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>What to Watch</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 50%, #7e22ce 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: white;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            text-align: center;
+            font-size: 3em;
+            margin-bottom: 10px;
+            text-shadow: 3px 3px 6px rgba(0,0,0,0.3);
+        }
+
+        .subtitle {
+            text-align: center;
+            font-size: 1.2em;
+            margin-bottom: 40px;
+            opacity: 0.9;
+        }
+
+        .filters {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 30px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .filter-group {
+            margin-bottom: 25px;
+        }
+
+        .filter-group:last-child {
+            margin-bottom: 0;
+        }
+
+        .filter-label {
+            display: block;
+            font-size: 1.1em;
+            font-weight: bold;
+            margin-bottom: 12px;
+        }
+
+        .mood-buttons, .type-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .mood-btn, .type-btn {
+            padding: 12px 24px;
+            background: rgba(255, 255, 255, 0.2);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 25px;
+            color: white;
+            cursor: pointer;
+            font-size: 16px;
+            transition: all 0.3s;
+            font-weight: 500;
+        }
+
+        .mood-btn:hover, .type-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+        }
+
+        .mood-btn.active, .type-btn.active {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            border-color: #f5576c;
+            box-shadow: 0 5px 15px rgba(245, 87, 108, 0.4);
+        }
+
+        .generate-btn {
+            width: 100%;
+            padding: 18px;
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            border: none;
+            border-radius: 15px;
+            color: white;
+            font-size: 1.3em;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 8px 20px rgba(245, 87, 108, 0.3);
+        }
+
+        .generate-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 25px rgba(245, 87, 108, 0.5);
+        }
+
+        .generate-btn:active {
+            transform: translateY(-1px);
+        }
+
+        .result {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 40px;
+            color: #333;
+            box-shadow: 0 15px 40px rgba(0,0,0,0.3);
+            display: none;
+            animation: slideIn 0.5s ease;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .result.show {
+            display: block;
+        }
+
+        .result-header {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 20px;
+            padding-bottom: 20px;
+            border-bottom: 3px solid #f5576c;
+        }
+
+        .result-icon {
+            font-size: 3em;
+        }
+
+        .result-title {
+            flex: 1;
+        }
+
+        .result-title h2 {
+            font-size: 2em;
+            color: #1e3c72;
+            margin-bottom: 5px;
+        }
+
+        .result-type {
+            display: inline-block;
+            padding: 5px 15px;
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+            border-radius: 20px;
+            font-size: 0.9em;
+            font-weight: bold;
+        }
+
+        .result-description {
+            font-size: 1.1em;
+            line-height: 1.7;
+            margin-bottom: 20px;
+            color: #555;
+        }
+
+        .result-mood {
+            background: #f0f0f0;
+            padding: 15px;
+            border-radius: 10px;
+            font-style: italic;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎬 What to Watch</h1>
+        <p class="subtitle">Scopri cosa guardare in base al tuo mood!</p>
+        
+        <div class="filters">
+            <div class="filter-group">
+                <label class="filter-label">Come ti senti oggi?</label>
+                <div class="mood-buttons">
+                    <button class="mood-btn" onclick="selectMood('felice')">😊 Felice</button>
+                    <button class="mood-btn" onclick="selectMood('triste')">😢 Triste</button>
+                    <button class="mood-btn" onclick="selectMood('avventuroso')">🚀 Avventuroso</button>
+                    <button class="mood-btn" onclick="selectMood('romantico')">💕 Romantico</button>
+                    <button class="mood-btn" onclick="selectMood('spaventato')">😱 Horror</button>
+                    <button class="mood-btn" onclick="selectMood('pensieroso')">🤔 Pensieroso</button>
+                    <button class="mood-btn" onclick="selectMood('rilassato')">😌 Rilassato</button>
+                </div>
+            </div>
+
+            <div class="filter-group">
+                <label class="filter-label">Cosa preferisci?</label>
+                <div class="type-buttons">
+                    <button class="type-btn" onclick="selectType('film')">🎥 Film</button>
+                    <button class="type-btn" onclick="selectType('serie')">📺 Serie TV</button>
+                    <button class="type-btn active" onclick="selectType('entrambi')">✨ Sorprendimi</button>
+                </div>
+            </div>
+
+            <button class="generate-btn" onclick="generateSuggestion()">🎲 Trova qualcosa da guardare!</button>
+        </div>
+
+        <div class="result" id="result">
+            <div class="result-header">
+                <div class="result-icon" id="resultIcon">🎬</div>
+                <div class="result-title">
+                    <h2 id="resultTitle"></h2>
+                    <span class="result-type" id="resultType"></span>
+                </div>
+            </div>
+            <p class="result-description" id="resultDescription"></p>
+            <div class="result-mood" id="resultMood"></div>
+        </div>
+    </div>
+
+    <script>
+        let selectedMood = null;
+        let selectedType = 'entrambi';
+
+        const content = {
+            felice: {
+                film: [
+                    { title: "La La Land", description: "Un musical romantico e colorato che ti farà sorridere e sognare. Musiche indimenticabili!", icon: "🎭" },
+                    { title: "Ratatouille", description: "Un topo che sogna di diventare chef a Parigi. Pixar al suo meglio!", icon: "🐀" },
+                    { title: "Forrest Gump", description: "La vita straordinaria di un uomo semplice. Ti scalderà il cuore.", icon: "🏃" },
+                    { title: "Mamma Mia!", description: "Musical pieno di energia con le canzoni degli ABBA!", icon: "🎤" },
+                    { title: "Paddington 2", description: "L'orso più gentile del cinema. Dolcezza pura e avventura!", icon: "🐻" },
+                    { title: "Legally Blonde", description: "Elle Woods dimostra che puoi essere glamour e intelligente!", icon: "💅" },
+                    { title: "The Grand Budapest Hotel", description: "Wes Anderson al suo meglio. Colorato, elegante e divertente!", icon: "🏨" },
+                    { title: "Sing Street", description: "Teenager irlandese forma una band. Musica e sogni anni '80!", icon: "🎸" },
+                    { title: "Clueless", description: "Commedia teen anni '90 iconica. Fashion e amicizia!", icon: "👗" },
+                    { title: "School of Rock", description: "Jack Black insegna rock a bambini. Energia pura!", icon: "🎸" },
+                    { title: "The Princess Bride", description: "Avventura fantasy romantica perfetta. Cult assoluto!", icon: "⚔️" },
+                    { title: "Ferris Bueller's Day Off", description: "Salta scuola e vivi la giornata perfetta a Chicago!", icon: "🏙️" },
+                    { title: "Mean Girls", description: "Commedia teen su popolarità e amicizia. Iconico!", icon: "👸" },
+                    { title: "Pitch Perfect", description: "Gruppo a cappella universitario. Musica e divertimento!", icon: "🎤" },
+                    { title: "The Intouchables", description: "Amicizia tra ricco disabile e badante. Francese commovente!", icon: "🤝" },
+                    { title: "Up", description: "Anziano vola con palloncini. Pixar emozionante e gioioso!", icon: "🎈" },
+                    { title: "Toy Story", description: "Giocattoli prendono vita. Pixar classico per tutti!", icon: "🤠" },
+                    { title: "Monsters Inc", description: "Mostri spaventano bambini per energia. Adorabile!", icon: "👹" },
+                    { title: "Hairspray", description: "Musical anni '60 su accettazione e danza!", icon: "💃" },
+                    { title: "Enchanted", description: "Principessa Disney nella New York reale. Magico!", icon: "👗" },
+                    { title: "The Greatest Showman", description: "Musical su PT Barnum. Canzoni coinvolgenti!", icon: "🎪" },
+                    { title: "Little Miss Sunshine", description: "Famiglia disfunzionale in road trip. Dolce e divertente!", icon: "🚐" },
+                    { title: "Amélie", description: "Ragazza parigina diffonde felicità. Visivamente magico!", icon: "🎨" },
+                    { title: "The Hundred-Foot Journey", description: "Ristorante indiano in Francia. Cibo e culture!", icon: "🍛" }
+                ],
+                serie: [
+                    { title: "Brooklyn Nine-Nine", description: "Commedia poliziesca esilarante. Risate a ogni episodio.", icon: "👮" },
+                    { title: "The Good Place", description: "Commedia filosofica sull'aldilà. Intelligente e sorprendente.", icon: "🌟" },
+                    { title: "Ted Lasso", description: "Allenatore americano in Inghilterra diffonde positività. Pura gioia!", icon: "⚽" },
+                    { title: "Friends", description: "Il classico che non invecchia. Sei amici a New York.", icon: "☕" },
+                    { title: "Parks and Recreation", description: "Mockumentary su un ufficio governativo. Ottimismo garantito!", icon: "🏛️" },
+                    { title: "Schitt's Creek", description: "Famiglia ricca perde tutto. Crescita personale e risate.", icon: "🌹" },
+                    { title: "Modern Family", description: "Tre famiglie diverse, tantissime risate.", icon: "📸" },
+                    { title: "The Office", description: "Vita d'ufficio ridicola e adorabile. Michael Scott è leggendario!", icon: "📄" },
+                    { title: "Kim's Convenience", description: "Famiglia coreana gestisce un negozio. Dolce e divertente.", icon: "🏪" },
+                    { title: "New Girl", description: "Ragazza eccentrica vive con tre uomini. Situazioni assurde!", icon: "🚪" },
+                    { title: "Community", description: "College con gruppo di studio folle. Meta-umorismo geniale.", icon: "🎓" },
+                    { title: "Arrested Development", description: "Famiglia disfunzionale esilarante. Umorismo intelligente.", icon: "🍌" },
+                    { title: "How I Met Your Mother", description: "Amici a New York e la ricerca dell'amore. Leggendario!", icon: "☔" },
+                    { title: "Scrubs", description: "Medici giovani in ospedale. Commedia e cuore!", icon: "🏥" },
+                    { title: "30 Rock", description: "Dietro le quinte di show TV. Tina Fey brillante!", icon: "📺" },
+                    { title: "Unbreakable Kimmy Schmidt", description: "Ragazza esce da bunker e scopre il mondo. Ottimista!", icon: "🌈" },
+                    { title: "Grace and Frankie", description: "Due donne anziane diventano amiche. Dolce e divertente!", icon: "👵" },
+                    { title: "Never Have I Ever", description: "Teen indiana-americana naviga liceo. Fresco e divertente!", icon: "📚" },
+                    { title: "Abbott Elementary", description: "Insegnanti in scuola elementare. Mockumentary adorabile!", icon: "🏫" },
+                    { title: "Only Murders in the Building", description: "Tre vicini indagano su omicidio. Commedia mystery!", icon: "🏢" },
+                    { title: "Derry Girls", description: "Ragazze irlandesi negli anni '90. Esilarante!", icon: "🇮🇪" },
+                    { title: "The Marvelous Mrs Maisel", description: "Casalinga anni '50 diventa comica. Brillante!", icon: "🎤" },
+                    { title: "What We Do in the Shadows", description: "Mockumentary su vampiri moderni. Assurdo e geniale!", icon: "🧛" },
+                    { title: "Great News", description: "Giornalista con madre che lavora con lei. Dolce!", icon: "📰" }
+                ]
+            },
+            triste: {
+                film: [
+                    { title: "Inside Out", description: "Pixar esplora le emozioni. Ti farà piangere e riflettere.", icon: "😭" },
+                    { title: "La teoria del tutto", description: "La storia di Stephen Hawking, toccante e ispirazionale.", icon: "🌌" },
+                    { title: "Coco", description: "Viaggio tra vita e morte nella cultura messicana. Preparati ai fazzoletti!", icon: "🎸" },
+                    { title: "A Beautiful Mind", description: "La vita del matematico John Nash. Profondamente umano.", icon: "🧮" },
+                    { title: "La vita è bella", description: "Amore e speranza durante l'Olocausto. Capolavoro italiano!", icon: "❤️" },
+                    { title: "Schindler's List", description: "Storia potente sull'Olocausto. Difficile ma importante.", icon: "🕯️" },
+                    { title: "The Green Mile", description: "Dramma in un carcere con elementi magici. Tom Hanks emozionante!", icon: "⚡" },
+                    { title: "Manchester by the Sea", description: "Uomo affronta tragedia del passato. Devastante e reale.", icon: "🌊" },
+                    { title: "Requiem for a Dream", description: "Dipendenze e sogni infranti. Intenso e disturbante.", icon: "💊" },
+                    { title: "Grave of the Fireflies", description: "Ghibli sulla guerra in Giappone. Il film più triste mai fatto.", icon: "🔥" },
+                    { title: "Room", description: "Madre e figlio prigionieri trovano libertà. Toccante.", icon: "🚪" },
+                    { title: "Blue Valentine", description: "Relazione che crolla nel tempo. Dolorosamente realistico.", icon: "💔" },
+                    { title: "The Boy in the Striped Pyjamas", description: "Amicizia durante l'Olocausto. Straziante.", icon: "👦" },
+                    { title: "My Sister's Keeper", description: "Famiglia affronta malattia. Emotivamente devastante.", icon: "💔" },
+                    { title: "Marley & Me", description: "Famiglia e il loro cane. Preparati a piangere!", icon: "🐕" },
+                    { title: "The Pursuit of Happyness", description: "Padre e figlio senzatetto cercano futuro migliore.", icon: "🏀" },
+                    { title: "Atonement", description: "Bugia distrugge vite. Romantico e tragico.", icon: "✍️" },
+                    { title: "Revolutionary Road", description: "Coppia anni '50 lotta con sogni infranti.", icon: "🏡" },
+                    { title: "The Fault in Our Stars", description: "Amore tra adolescenti malati. Lacrime garantite.", icon: "⭐" },
+                    { title: "Still Alice", description: "Donna affronta Alzheimer. Julianne Moore devastante.", icon: "🧠" },
+                    { title: "Lion", description: "Uomo cerca famiglia biologica in India. Emozionante.", icon: "🦁" },
+                    { title: "The Notebook", description: "Amore che sfida l'Alzheimer. Classico lacrimogeno.", icon: "📓" },
+                    { title: "Hachi A Dog's Tale", description: "Cane aspetta padrone per anni. Impossibile non piangere.", icon: "🐕" },
+                    { title: "Philadelphia", description: "Avvocato con AIDS lotta per giustizia. Tom Hanks potente.", icon: "⚖️" }
+                ],
+                serie: [
+                    { title: "This Is Us", description: "Drama familiare che tocca corde profonde. Ogni episodio è un'emozione.", icon: "👨‍👩‍👧‍👦" },
+                    { title: "After Life", description: "Ricky Gervais affronta il lutto con umorismo nero.", icon: "🐕" },
+                    { title: "The Crown", description: "Storia della famiglia reale britannica. Elegante e malinconico.", icon: "👑" },
+                    { title: "BoJack Horseman", description: "Animazione profonda su depressione e ricerca di senso.", icon: "🐴" },
+                    { title: "13 Reasons Why", description: "Serie intensa sul bullismo. Emozionalmente pesante.", icon: "📼" },
+                    { title: "The Handmaid's Tale", description: "Distopia femminista opprimente. Difficile ma importante.", icon: "🔴" },
+                    { title: "Euphoria", description: "Adolescenza cruda con dipendenze. Visivamente stupenda ma intensa.", icon: "💎" },
+                    { title: "Breaking Bad", description: "La caduta morale di un uomo. Tragico e avvincente.", icon: "🧪" },
+                    { title: "The Leftovers", description: "2% della popolazione scompare. Elaborazione del lutto globale.", icon: "🕊️" },
+                    { title: "Six Feet Under", description: "Famiglia di pompe funebri. Vita e morte quotidiane.", icon: "⚰️" },
+                    { title: "The Queen's Gambit", description: "Orfana geniale agli scacchi lotta con dipendenze.", icon: "♟️" },
+                    { title: "When They See Us", description: "Storia vera sui Central Park Five. Doloroso e necessario.", icon: "⚖️" },
+                    { title: "Chernobyl", description: "Disastro nucleare del 1986. Devastante e realistico.", icon: "☢️" },
+                    { title: "The Act", description: "Storia vera di abuso e omicidio. Disturbante.", icon: "🏥" },
+                    { title: "Mare of Easttown", description: "Detective indaga mentre affronta tragedie personali.", icon: "🔍" },
+                    { title: "Sharp Objects", description: "Giornalista torna a casa e affronta traumi. Dark.", icon: "📰" },
+                    { title: "The Sinner", description: "Detective indaga crimini con motivazioni oscure.", icon: "🔪" },
+                    { title: "Big Little Lies", description: "Madri benestanti nascondono segreti oscuri.", icon: "🏖️" },
+                    { title: "A Million Little Things", description: "Amici affrontano suicidio di un amico. Toccante.", icon: "👥" },
+                    { title: "One Tree Hill", description: "Adolescenti affrontano drammi familiari. Melodrammatico.", icon: "🏀" },
+                    { title: "Grey's Anatomy", description: "Medici affrontano vita, morte e amore. Drama medico.", icon: "🏥" },
+                    { title: "Parenthood", description: "Grande famiglia affronta gioie e dolori. Realistico.", icon: "👨‍👩‍👧‍👦" },
+                    { title: "Friday Night Lights", description: "Football texano e problemi familiari. Emotivo.", icon: "🏈" },
+                    { title: "The Wire", description: "Baltimora e guerra alla droga. Realistico e tragico.", icon: "🏙️" }
+                ]
+            },
+            avventuroso: {
+                film: [
+                    { title: "Mad Max Fury Road", description: "Azione pura nel deserto post-apocalittico. Spettacolare!", icon: "🔥" },
+                    { title: "Indiana Jones", description: "Il classico film d'avventura. Azione, misteri e fruste!", icon: "🎩" },
+                    { title: "Il Signore degli Anelli", description: "L'epica trilogia fantasy che definisce il genere.", icon: "⚔️" },
+                    { title: "Dune", description: "Epopea fantascientifica visivamente mozzafiato.", icon: "🏜️" },
+                    { title: "Jurassic Park", description: "Dinosauri prendono vita! Spielberg crea magia.", icon: "🦖" },
+                    { title: "The Matrix", description: "Realtà virtuale e kung fu. Rivoluzionario!", icon: "💻" },
+                    { title: "Gladiator", description: "Schiavo diventa gladiatore leggendario. Epico!", icon: "🗡️" },
+                    { title: "Pirates of the Caribbean", description: "Jack Sparrow e avventure piratesche. Divertimento puro!", icon: "🏴‍☠️" },
+                    { title: "The Hobbit", description: "Bilbo Baggins in un'avventura inaspettata!", icon: "🧙" },
+                    { title: "Avengers Endgame", description: "Il culmine dell'MCU. Epico e emozionante!", icon: "💥" },
+                    { title: "Guardiani della Galassia", description: "Supereroi nello spazio con musica anni '70. Divertentissimo!", icon: "🚀" },
+                    { title: "John Wick", description: "Keanu Reeves vendica il suo cane. Azione coreografata perfetta!", icon: "🔫" },
+                    { title: "Spider-Man Into the Spider-Verse", description: "Animazione rivoluzionaria su multiverso Spider-Man!", icon: "🕷️" },
+                    { title: "Top Gun Maverick", description: "Tom Cruise torna come pilota. Adrenalina pura!", icon: "✈️" },
+                    { title: "Mission Impossible", description: "Tom Cruise fa acrobazie impossibili. Thrilling!", icon: "🎯" },
+                    { title: "Avatar", description: "Pandora e i Na'vi. Visivamente mozzafiato!", icon: "🌳" },
+                    { title: "Star Wars", description: "La saga spaziale che ha definito generazioni!", icon: "⭐" },
+                    { title: "Blade Runner", description: "Cacciatore di replicanti nel futuro. Cult sci-fi!", icon: "🌃" },
+                    { title: "Inception", description: "Sogni dentro sogni. Nolan geniale!", icon: "🌀" },
+                    { title: "The Dark Knight", description: "Batman vs Joker. Il supereroi film perfetto!", icon: "🦇" },
+                    { title: "Thor Ragnarok", description: "Thor divertente e colorato. Il migliore della serie!", icon: "⚡" },
+                    { title: "Black Panther", description: "Wakanda Forever! Supereroi afrocentrici!", icon: "🐆" },
+                    { title: "Dune Part Two", description: "Continua l'epopea su Arrakis. Spettacolare!", icon: "🏜️" },
+                    { title: "Everything Everywhere All at Once", description: "Multiverso folle e emozionante. Oscar meritati!", icon: "🌀" }
+                ],
+                serie: [
+                    { title: "Stranger Things", description: "Avventure soprannaturali anni '80. Misteri e Sottosopra.", icon: "🔦" },
+                    { title: "Avatar The Last Airbender", description: "Animazione epica con magia degli elementi.", icon: "🌊" },
+                    { title: "The Mandalorian", description: "Avventure Star Wars con Baby Yoda. Spazio western!", icon: "🚀" },
+                    { title: "Vikings", description: "Saga vichinga piena di battaglie e mitologia nordica.", icon: "⚓" },
+                    { title: "Game of Thrones", description: "Epopea fantasy con draghi e intrighi. Imprevedibile!", icon: "🐉" },
+                    { title: "The Witcher", description: "Cacciatore di mostri in mondo fantasy oscuro.", icon: "⚔️" },
+                    { title: "Lost", description: "Sopravvissuti su isola misteriosa. Misteri su misteri!", icon: "🏝️" },
+                    { title: "The Last of Us", description: "Post-apocalisse con funghi zombie. Brutale ed emozionante.", icon: "🍄" },
+                    { title: "Cobra Kai", description: "Sequel di Karate Kid. Arti marziali e nostalgia anni '80.", icon: "🥋" },
+                    { title: "Arcane", description: "Animazione spettacolare League of Legends. Visivamente mozzafiato!", icon: "⚡" },
+                    { title: "The Boys", description: "Supereroi corrotti e vigilanti. Violento e sovversivo.", icon: "💥" },
+                    { title: "One Piece", description: "Pirati alla ricerca del tesoro. Avventura epica infinita!", icon: "🏴‍☠️" },
+                    { title: "House of the Dragon", description: "Prequel di GoT sui Targaryen. Draghi e guerre!", icon: "🐉" },
+                    { title: "The Expanse", description: "Space opera realistica. Politica e avventura spaziale!", icon: "🚀" },
+                    { title: "Peaky Blinders", description: "Gang di Birmingham post-WWI. Stiloso e violento!", icon: "🎩" },
+                    { title: "Money Heist", description: "Rapina alla Zecca di Spagna. Thriller spagnolo avvincente!", icon: "💰" },
+                    { title: "Narcos", description: "Pablo Escobar e cartelli della droga. Basato su fatti reali!", icon: "💊" },
+                    { title: "Squid Game", description: "Giochi mortali per soldi. Thriller coreano virale!", icon: "🔺" },
+                    { title: "The 100", description: "Adolescenti tornano su Terra post-apocalittica!", icon: "🌍" },
+                    { title: "Attack on Titan", description: "Umani vs giganti. Anime oscuro e brutale!", icon: "⚔️" },
+                    { title: "The Umbrella Academy", description: "Supereroi disfunzionali salvano il mondo. Strano e divertente!", icon: "☂️" },
+                    { title: "Daredevil", description: "Avvocato cieco è vigilante notturno. Marvel oscuro!", icon: "👊" },
+                    { title: "Warrior", description: "Arti marziali in Chinatown del 1800. Bruce Lee inspired!", icon: "🥊" },
+                    { title: "The Wheel of Time", description: "Fantasy epico basato sui libri. Magia e profezie!", icon: "🔮" }
+                ]
+            },
+            romantico: {
+                film: [
+                    { title: "Pride and Prejudice", description: "Jane Austen prende vita. Elegante storia d'amore.", icon: "💐" },
+                    { title: "Crazy Stupid Love", description: "Commedia romantica con storie intrecciate. Dolce!", icon: "💘" },
+                    { title: "The Notebook", description: "Storia d'amore attraverso i decenni. Il classico romantico.", icon: "📓" },
+                    { title: "Prima dell'alba", description: "Due sconosciuti a Vienna si innamorano. Magico!", icon: "🌅" },
+                    { title: "Titanic", description: "Jack e Rose sulla nave maledetta. Iconico!", icon: "🚢" },
+                    { title: "10 Things I Hate About You", description: "Rivisitazione teen di Shakespeare. Carinissimo!", icon: "📝" },
+                    { title: "Love Actually", description: "Tante storie d'amore intrecciate a Natale. Dolce!", icon: "🎄" },
+                    { title: "Dirty Dancing", description: "Ballo e romanticismo anni '80. Nobody puts Baby in a corner!", icon: "💃" },
+                    { title: "The Fault in Our Stars", description: "Amore tra adolescenti malati. Preparati a piangere!", icon: "⭐" },
+                    { title: "500 Days of Summer", description: "Amore non corrisposto raccontato in ordine sparso. Realistico!", icon: "☀️" },
+                    { title: "When Harry Met Sally", description: "Possono uomo e donna essere solo amici? Classico!", icon: "🥪" },
+                    { title: "A Star Is Born", description: "Cantante scopre talento, nasce amore. Lady Gaga emozionante!", icon: "🎤" },
+                    { title: "Call Me By Your Name", description: "Estate italiana e amore tra due ragazzi. Bellissimo!", icon: "🍑" },
+                    { title: "La La Land", description: "Musical romantico a Los Angeles. Sognante!", icon: "🎭" },
+                    { title: "Silver Linings Playbook", description: "Due persone con problemi si trovano. Realistico!", icon: "🏈" },
+                    { title: "Pretty Woman", description: "Businessman e prostituta si innamorano. Classico anni '90!", icon: "👠" },
+                    { title: "Ghost", description: "Amore oltre la morte. Patrick Swayze iconico!", icon: "👻" },
+                    { title: "Brokeback Mountain", description: "Amore proibito tra cowboy. Potente e tragico!", icon: "🏔️" },
+                    { title: "The Proposal", description: "Matrimonio finto diventa reale. Sandra Bullock perfetta!", icon: "💍" },
+                    { title: "Notting Hill", description: "Attrice famosa e libraio normale. Hugh Grant adorabile!", icon: "🎬" },
+                    { title: "Bridget Jones's Diary", description: "Single cerca amore a Londra. Divertente e relatable!", icon: "📔" },
+                    { title: "Eternal Sunshine", description: "Cancellare ricordi di una relazione. Poetico!", icon: "🧠" },
+                    { title: "About Time", description: "Viaggi nel tempo e amore. Richard Curtis commovente!", icon: "⏰" },
+                    { title: "Me Before You", description: "Caregiver si innamora del paziente. Emozionante!", icon: "♿" }
+                ],
+                serie: [
+                    { title: "Bridgerton", description: "Romanticismo in costume nell'alta società. Elegante e passionale!", icon: "💎" },
+                    { title: "Emily in Paris", description: "Moda, romanticismo e cultura a Parigi. Leggero!", icon: "🗼" },
+                    { title: "Outlander", description: "Viaggi nel tempo e Scozia. Storia d'amore epica!", icon: "🏴󠁧󠁢󠁳󠁣󠁴󠁿" },
+                    { title: "Normal People", description: "Storia d'amore complessa tra giovani irlandesi. Intima!", icon: "💕" },
+                    { title: "Virgin River", description: "Infermiera in paesino trova amore. Confortante!", icon: "🌲" },
+                    { title: "Heartstopper", description: "Adorabile storia d'amore LGBTQ+ teen. Dolcissimo!", icon: "🍂" },
+                    { title: "You", description: "Stalker romantico ossessivo. Disturbante ma avvincente!", icon: "📚" },
+                    { title: "Love Is Blind", description: "Reality dove si fidanzano senza vedersi. Drama garantito!", icon: "💍" },
+                    { title: "Jane the Virgin", description: "Telenovela romantica ironica. Triangoli amorosi!", icon: "✍️" },
+                    { title: "Gossip Girl", description: "Drama romantico alta società Manhattan. Intrighi!", icon: "👑" },
+                    { title: "Downton Abbey", description: "Romanticismo in costume nell'Inghilterra del '900.", icon: "🏰" },
+                    { title: "The Summer I Turned Pretty", description: "Triangolo amoroso estivo. Young adult romantico!", icon: "🏖️" },
+                    { title: "Gilmore Girls", description: "Madre e figlia, storie d'amore. Confortante!", icon: "☕" },
+                    { title: "Sex and the City", description: "Quattro donne a New York cercano amore. Iconico!", icon: "👠" },
+                    { title: "Dawson's Creek", description: "Adolescenti e amore in piccola città. Nostalgico!", icon: "🌊" },
+                    { title: "The O.C.", description: "Drama teen California con triangoli amorosi!", icon: "🌴" },
+                    { title: "One Tree Hill", description: "Basket, amore e drama in North Carolina!", icon: "🏀" },
+                    { title: "Younger", description: "Donna finge di avere 26 anni per lavoro. Romantico!", icon: "📚" },
+                    { title: "Reign", description: "Maria Stuart in Francia. Storia e romanticismo!", icon: "👑" },
+                    { title: "The Vampire Diaries", description: "Triangolo amoroso con vampiri. Supernatural romance!", icon: "🧛" },
+                    { title: "Felicity", description: "Ragazza va al college per un ragazzo. Drama teen!", icon: "🎓" },
+                    { title: "90 Day Fiancé", description: "Coppie internazionali e 90 giorni per sposarsi!", icon: "✈️" },
+                    { title: "Never Have I Ever", description: "Teen indiana-americana cerca amore. Divertente!", icon: "📚" },
+                    { title: "Sweet Magnolias", description: "Tre amiche nel Sud americano. Romantico e dolce!", icon: "🌸" }
+                ]
+            },
+            spaventato: {
+                film: [
+                    { title: "A Quiet Place", description: "Horror dove il silenzio è sopravvivenza. Creature letali!", icon: "🤫" },
+                    { title: "The Conjuring", description: "Horror classico basato su casi reali. Brividi garantiti!", icon: "👻" },
+                    { title: "Get Out", description: "Horror psicologico con critica sociale. Fiato sospeso!", icon: "😰" },
+                    { title: "Hereditary", description: "Horror disturbante su segreti familiari. Non per deboli!", icon: "🏚️" },
+                    { title: "The Shining", description: "Kubrick e King creano il classico horror. Qui c'è Johnny!", icon: "🪓" },
+                    { title: "It", description: "Clown terrificante terrorizza bambini. Pennywise è un incubo!", icon: "🎈" },
+                    { title: "The Exorcist", description: "Possessione demoniaca. Il film horror più spaventoso mai fatto!", icon: "😈" },
+                    { title: "Sinister", description: "Scrittore trova filmati inquietanti. Disturbante!", icon: "📹" },
+                    { title: "Insidious", description: "Famiglia perseguitata da entità. Jump scare efficaci!", icon: "👻" },
+                    { title: "The Ring", description: "Video maledetto uccide dopo 7 giorni. Classico horror!", icon: "📼" },
+                    { title: "Scream", description: "Slasher meta che reinventa il genere. Ghostface iconico!", icon: "☎️" },
+                    { title: "Nightmare on Elm Street", description: "Freddy Krueger ti uccide nei sogni. Terrificante!", icon: "😱" },
+                    { title: "Halloween", description: "Michael Myers e la notte di Halloween. Classico slasher!", icon: "🎃" },
+                    { title: "The Babadook", description: "Madre e figlio vs mostro del libro. Psicologico!", icon: "📖" },
+                    { title: "Midsommar", description: "Horror in pieno giorno in Svezia. Disturbante!", icon: "🌻" },
+                    { title: "Us", description: "Famiglia incontra doppelgänger malvagi. Jordan Peele!", icon: "✂️" },
+                    { title: "The Descent", description: "Donne in grotte con creature. Claustrofobico!", icon: "🦇" },
+                    { title: "28 Days Later", description: "Zombie veloci in UK post-apocalittico. Terrificante!", icon: "🧟" },
+                    { title: "The Blair Witch Project", description: "Found footage nella foresta. Cult horror!", icon: "🎥" },
+                    { title: "Paranormal Activity", description: "Casa infestata con telecamere. Inquietante!", icon: "📹" },
+                    { title: "The Witch", description: "Famiglia puritana e stregoneria. Atmosferico!", icon: "🐐" },
+                    { title: "Don't Breathe", description: "Rapinatori vs veterano cieco. Thriller intenso!", icon: "👁️" },
+                    { title: "Smile", description: "Maledizione che fa sorridere prima di uccidere!", icon: "😃" },
+                    { title: "Annabelle", description: "Bambola posseduta. Parte del Conjuring universe!", icon: "🪆" }
+                ],
+                serie: [
+                    { title: "Stranger Things", description: "Tra horror e avventura. Il Sottosopra fa rabbrividire!", icon: "👾" },
+                    { title: "The Haunting of Hill House", description: "Horror psicologico su famiglia e casa infestata. Terrificante!", icon: "🏚️" },
+                    { title: "American Horror Story", description: "Antologia horror diverse stagioni. Disturbante e creativo!", icon: "🎭" },
+                    { title: "The Walking Dead", description: "Zombie apocalypse e sopravvivenza. Tensione costante!", icon: "🧟" },
+                    { title: "Wednesday", description: "Figlia di Addams in collegio gotico. Dark comedy horror!", icon: "🕷️" },
+                    { title: "Yellowjackets", description: "Squadra femminile si schianta in foresta. Cannibalismo!", icon: "✈️" },
+                    { title: "Evil", description: "Psicologa indaga fenomeni paranormali. Demoni e scienza!", icon: "😈" },
+                    { title: "Archive 81", description: "Archivista restaura video inquietanti. Found footage!", icon: "📹" },
+                    { title: "The Terror", description: "Spedizione artica contro soprannaturale. Claustrofobico!", icon: "❄️" },
+                    { title: "Midnight Mass", description: "Isola isolata, prete misterioso. Horror religioso lento!", icon: "⛪" },
+                    { title: "From", description: "Città da cui non si scappa con creature. Angosciante!", icon: "🌙" },
+                    { title: "Servant", description: "Coppia con bambinaia per bambola. Psicologico disturbante!", icon: "👶" },
+                    { title: "Penny Dreadful", description: "Mostri classici in Londra vittoriana. Gothic horror!", icon: "🕯️" },
+                    { title: "The Haunting of Bly Manor", description: "Seguito di Hill House. Fantasmi e amore!", icon: "🏰" },
+                    { title: "Chucky", description: "Bambola assassina torna. Slasher divertente!", icon: "🔪" },
+                    { title: "Ash vs Evil Dead", description: "Ash combatte demoni. Horror comedy!", icon: "🪓" },
+                    { title: "Castle Rock", description: "Universo Stephen King interconnesso. Inquietante!", icon: "🏘️" },
+                    { title: "Channel Zero", description: "Antologia horror su creepypasta. Surreale!", icon: "📺" },
+                    { title: "The Exorcist", description: "Serie basata sul film. Possessioni moderne!", icon: "😈" },
+                    { title: "Marianne", description: "Horror francese su scrittrice e incubi. Spaventoso!", icon: "✍️" },
+                    { title: "Them", description: "Famiglia nera negli anni '50 vs terrori. Intenso!", icon: "🏠" },
+                    { title: "Brand New Cherry Flavor", description: "Regista a LA e maledizione. Weird horror!", icon: "🍒" },
+                    { title: "The Fall of the House of Usher", description: "Mike Flanagan rivisita Poe. Gothic moderno!", icon: "🏚️" },
+                    { title: "Lovecraft Country", description: "Razzismo e orrori lovecraftiani negli anni '50!", icon: "🐙" }
+                ]
+            },
+            pensieroso: {
+                film: [
+                    { title: "Inception", description: "Thriller sui sogni. Ti farà riflettere sulla realtà!", icon: "🌀" },
+                    { title: "Arrival", description: "Fantascienza filosofica su linguaggio e tempo. Profondo!", icon: "🛸" },
+                    { title: "The Truman Show", description: "Vita come show TV. Riflessione su realtà e libertà!", icon: "📺" },
+                    { title: "Interstellar", description: "Viaggio spaziale epico. Fisica, amore e destino!", icon: "🌌" },
+                    { title: "Blade Runner 2049", description: "Cosa significa essere umani? Visivamente stupendo!", icon: "🤖" },
+                    { title: "Her", description: "Uomo si innamora di un'AI. Intimamente filosofico!", icon: "💭" },
+                    { title: "Eternal Sunshine", description: "Cancellare ricordi di una relazione. Profondo e poetico!", icon: "🧠" },
+                    { title: "Memento", description: "Uomo senza memoria a breve termine cerca vendetta. Brillante!", icon: "📸" },
+                    { title: "Donnie Darko", description: "Adolescente e viaggi nel tempo. Cult enigmatico!", icon: "🐰" },
+                    { title: "Fight Club", description: "Identità, consumismo e caos. Non parlarne!", icon: "🥊" },
+                    { title: "Shutter Island", description: "Detective indaga su isola psichiatrica. Colpo di scena!", icon: "🏝️" },
+                    { title: "Prisoners", description: "Padre cerca figlia rapita. Thriller morale intenso!", icon: "🔍" },
+                    { title: "Ex Machina", description: "Programmatore testa AI. Cosa significa coscienza?", icon: "🤖" },
+                    { title: "The Prestige", description: "Due maghi rivali. Nolan con colpo di scena!", icon: "🎩" },
+                    { title: "Minority Report", description: "Futuro dove crimini si prevengono. Etico?", icon: "👁️" },
+                    { title: "Gattaca", description: "Futuro con eugenetica. Fantascienza filosofica!", icon: "🧬" },
+                    { title: "Moon", description: "Astronauta solo sulla Luna scopre verità. Cerebrale!", icon: "🌙" },
+                    { title: "The Fountain", description: "Amore attraverso tre ere. Darren Aronofsky poetico!", icon: "🌳" },
+                    { title: "Primer", description: "Scienziati creano macchina del tempo. Complesso!", icon: "⏱️" },
+                    { title: "Coherence", description: "Cena party durante cometa. Realtà si frantuma!", icon: "☄️" },
+                    { title: "Predestination", description: "Viaggi nel tempo e paradossi. Mind-bending!", icon: "🔁" },
+                    { title: "Triangle", description: "Loop temporale su nave. Mystery intrigante!", icon: "⛴️" },
+                    { title: "The Man From Earth", description: "Uomo immortale racconta storia. Solo dialoghi!", icon: "🗣️" },
+                    { title: "Annihilation", description: "Spedizione in zona aliena. Filosofico e bello!", icon: "🌈" }
+                ],
+                serie: [
+                    { title: "Black Mirror", description: "Antologia distopica su tecnologia. Pensaci per giorni!", icon: "📱" },
+                    { title: "Dark", description: "Thriller tedesco su viaggi nel tempo. Complessissimo!", icon: "⏰" },
+                    { title: "Westworld", description: "Fantascienza su androidi e coscienza. Labirinti mentali!", icon: "🤖" },
+                    { title: "Mr Robot", description: "Hacker contro il sistema. Paranoia e rivoluzione!", icon: "💻" },
+                    { title: "The OA", description: "Donna riappare con storia incredibile. Misterioso e spirituale!", icon: "🔮" },
+                    { title: "Severance", description: "Dipendenti con memorie divise. Distopia corporativa!", icon: "🏢" },
+                    { title: "Russian Doll", description: "Donna in loop temporale. Esistenziale e intelligente!", icon: "🪆" },
+                    { title: "Devs", description: "Azienda tech e determinismo. Fantascienza filosofica!", icon: "💻" },
+                    { title: "The Leftovers", description: "2% scompare, sopravvissuti elaborano. Profondo!", icon: "🕊️" },
+                    { title: "Maniac", description: "Sperimentazione farmaceutica con fantasie. Surreale!", icon: "💊" },
+                    { title: "1899", description: "Nave di immigrati incontra mistero. Puzzle temporale!", icon: "🚢" },
+                    { title: "The Man in the High Castle", description: "Realtà alternativa dove Axis vince. Cosa succederebbe se...", icon: "🗽" },
+                    { title: "Altered Carbon", description: "Coscienze trasferibili in corpi. Cyberpunk filosofico!", icon: "💾" },
+                    { title: "The Expanse", description: "Politica spaziale realistica. Fantascienza hard!", icon: "🚀" },
+                    { title: "Counterpart", description: "Mondo parallelo accessibile. Spy thriller sci-fi!", icon: "🚪" },
+                    { title: "Sense8", description: "Otto persone connesse mentalmente. Wachowski filosofico!", icon: "🌍" },
+                    { title: "Legion", description: "Mutante con schizofrenia. Surreale e psichedelico!", icon: "🧠" },
+                    { title: "The Prisoner", description: "Classico anni '60 su prigionia. Allegorico!", icon: "🎈" },
+                    { title: "Utopia", description: "Cospirazione da fumetto diventa reale. Stilizzato!", icon: "🎨" },
+                    { title: "Undone", description: "Donna con poteri temporali. Rotoscope bellissimo!", icon: "🎭" },
+                    { title: "Tales From the Loop", description: "Antologia sci-fi emotiva. Filosofica e lenta!", icon: "🔬" },
+                    { title: "The Twilight Zone", description: "Antologia classica con colpi di scena. Intramontabile!", icon: "👁️" },
+                    { title: "Raised by Wolves", description: "Androidi crescono umani su pianeta alieno. Ridley Scott!", icon: "🤖" },
+                    { title: "For All Mankind", description: "Storia alternativa conquista spaziale. E se i russi...", icon: "🌙" }
+                ]
+            },
+            rilassato: {
+                film: [
+                    { title: "Il mio vicino Totoro", description: "Film Ghibli dolce su creature magiche. Rilassante!", icon: "🌳" },
+                    { title: "Il favoloso mondo di Amélie", description: "Parigi magica di una sognatrice. Poetico!", icon: "🎨" },
+                    { title: "Chef", description: "Cuoco ricomincia con food truck. Cibo e leggerezza!", icon: "🍔" },
+                    { title: "La città incantata", description: "Capolavoro Ghibli su mondo di spiriti. Ipnotico!", icon: "🏮" },
+                    { title: "Julie & Julia", description: "Due donne e la passione per la cucina. Delizioso!", icon: "🍳" },
+                    { title: "Ratatouille", description: "Topo chef a Parigi. Rilassante e gourmet!", icon: "🐀" },
+                    { title: "The Secret Life of Walter Mitty", description: "Impiegato vive avventure straordinarie. Ispirazionale!", icon: "🏔️" },
+                    { title: "Big Fish", description: "Padre racconta storie fantastiche. Magico e dolce!", icon: "🐟" },
+                    { title: "The Sound of Music", description: "Musical classico in Austria. Canzoni indimenticabili!", icon: "🎵" },
+                    { title: "Moonrise Kingdom", description: "Due bambini scappano insieme. Wes Anderson delicato!", icon: "🏕️" },
+                    { title: "Kiki's Delivery Service", description: "Strega giovane inizia servizio di consegne. Ghibli rilassante!", icon: "🧹" },
+                    { title: "Finding Nemo", description: "Padre cerca figlio nell'oceano. Pixar dolce e divertente!", icon: "🐠" },
+                    { title: "Whisper of the Heart", description: "Ragazza sogna di scrivere. Ghibli slice of life!", icon: "📖" },
+                    { title: "Ponyo", description: "Pesce diventa bambina. Ghibli colorato e dolce!", icon: "🐟" },
+                    { title: "Chocolat", description: "Cioccolateria trasforma paesino francese. Dolce!", icon: "🍫" },
+                    { title: "The Best Exotic Marigold Hotel", description: "Anziani in India. Dolce e uplifting!", icon: "🏨" },
+                    { title: "Under the Tuscan Sun", description: "Donna ricomincia in Toscana. Visivamente bello!", icon: "🍇" },
+                    { title: "A Good Year", description: "Uomo eredita vigneto in Francia. Rilassante!", icon: "🍷" },
+                    { title: "Eat Pray Love", description: "Viaggio di scoperta in tre paesi. Ispirazionale!", icon: "✈️" },
+                    { title: "Brooklyn", description: "Immigrata irlandese in America anni '50. Dolce!", icon: "🌉" },
+                    { title: "Begin Again", description: "Musica e ricominciare a New York. Delicato!", icon: "🎵" },
+                    { title: "Yesterday", description: "Mondo senza Beatles. Musicale e dolce!", icon: "🎸" },
+                    { title: "The Hundred-Foot Journey", description: "Ristorante indiano vs francese. Cibo delizioso!", icon: "🍛" },
+                    { title: "My Octopus Teacher", description: "Documentario su amicizia con polpo. Bellissimo!", icon: "🐙" }
+                ],
+                serie: [
+                    { title: "The Great British Bake Off", description: "Pasticceria rilassante. Zero drama, solo torte!", icon: "🧁" },
+                    { title: "Gilmore Girls", description: "Madre e figlia in piccola città. Atmosfera calda!", icon: "☕" },
+                    { title: "Queer Eye", description: "Makeover show positivo. Gentilezza e accettazione!", icon: "✨" },
+                    { title: "Bob's Burgers", description: "Famiglia gestisce ristorante. Dolce e strano!", icon: "🍔" },
+                    { title: "Great Pottery Throw Down", description: "Competizione ceramica rilassante. Creatività senza stress!", icon: "🏺" },
+                    { title: "Somebody Feed Phil", description: "Phil viaggia e mangia. Pura gioia e gentilezza!", icon: "🍜" },
+                    { title: "Bluey", description: "Famiglia di cani in Australia. Adorabile per tutti!", icon: "🐕" },
+                    { title: "Nailed It", description: "Pasticcieri pessimi tentano dolci. Disastri esilaranti!", icon: "🎂" },
+                    { title: "Terrace House", description: "Reality giapponese educato. Zero drama, massimo relax!", icon: "🏠" },
+                    { title: "Interior Design Challenge", description: "Competizione design d'interni. Bellezza e creatività!", icon: "🛋️" },
+                    { title: "The Repair Shop", description: "Artigiani restaurano oggetti amati. Commovente e rilassante!", icon: "🔧" },
+                    { title: "Salt Fat Acid Heat", description: "Chef esplora cucina mondiale. Educativo e delizioso!", icon: "🍳" },
+                    { title: "Chef's Table", description: "Documentari su chef stellati. Visivamente stupendo!", icon: "🍽️" },
+                    { title: "Planet Earth", description: "Documentario natura di BBC. Rilassante e bello!", icon: "🌍" },
+                    { title: "Blue Planet", description: "Oceani documentati magnificamente. Ipnotico!", icon: "🌊" },
+                    { title: "Midnight Diner", description: "Ristorante giapponese notturno. Storie dolci!", icon: "🍜" },
+                    { title: "Mushi-Shi", description: "Anime episodico su creature mistiche. Atmosferico!", icon: "🌿" },
+                    { title: "The Great Interior Design Challenge", description: "Design britannico rilassante. Creatività pura!", icon: "🏠" },
+                    { title: "Abstract: The Art of Design", description: "Documentario su designer famosi. Ispirazionale!", icon: "✏️" },
+                    { title: "Sugar Rush", description: "Pasticceri fanno dolci veloci. Colorato e dolce!", icon: "🍭" },
+                    { title: "Tiny House Nation", description: "Case minuscole su misura. Architettura creativa!", icon: "🏡" },
+                    { title: "Aerial America", description: "USA dall'alto. Visivamente rilassante!", icon: "🚁" },
+                    { title: "Moving Art", description: "Natura in slow motion con musica. Meditativo!", icon: "🌺" },
+                    { title: "Our Planet", description: "Documentario natura di Netflix. Bellissimo!", icon: "🦁" }
+                ]
+            }
+        };
+
+        function selectMood(mood) {
+            selectedMood = mood;
+            document.querySelectorAll('.mood-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+        }
+
+        function selectType(type) {
+            selectedType = type;
+            document.querySelectorAll('.type-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+        }
+
+        function generateSuggestion() {
+            if (!selectedMood) {
+                alert('⚠️ Seleziona prima come ti senti!');
+                return;
+            }
+
+            const moodContent = content[selectedMood];
+            let suggestions = [];
+
+            if (selectedType === 'film') {
+                suggestions = moodContent.film;
+            } else if (selectedType === 'serie') {
+                suggestions = moodContent.serie;
+            } else {
+                suggestions = [...moodContent.film, ...moodContent.serie];
+            }
+
+            const randomSuggestion = suggestions[Math.floor(Math.random() * suggestions.length)];
+            const isFilm = moodContent.film.includes(randomSuggestion);
+
+            document.getElementById('resultIcon').textContent = randomSuggestion.icon;
+            document.getElementById('resultTitle').textContent = randomSuggestion.title;
+            document.getElementById('resultType').textContent = isFilm ? '🎥 Film' : '📺 Serie TV';
+            document.getElementById('resultDescription').textContent = randomSuggestion.description;
+            document.getElementById('resultMood').textContent = `💡 Perfetto per quando ti senti ${getMoodText(selectedMood)}`;
+
+            const resultDiv = document.getElementById('result');
+            resultDiv.classList.remove('show');
+            setTimeout(() => {
+                resultDiv.classList.add('show');
+                resultDiv.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            }, 100);
+        }
+
+        function getMoodText(mood) {
+            const moodTexts = {
+                felice: 'felice e vuoi celebrare',
+                triste: 'giù e hai bisogno di qualcosa che tocchi il cuore',
+                avventuroso: 'avventuroso e pronto all\'azione',
+                romantico: 'romantico e sognante',
+                spaventato: 'coraggioso e vuoi qualche brivido',
+                pensieroso: 'riflessivo e filosofico',
+                rilassato: 'rilassato e vuoi qualcosa di leggero'
+            };
+            return moodTexts[mood];
+        }
+    </script>
+</body>
+</html>
